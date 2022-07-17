@@ -1,9 +1,9 @@
 package services
 
 import (
+	"fmt"
 	"strings"
 	"time"
-	"fmt"
 )
 
 type MyQService interface {
@@ -11,19 +11,19 @@ type MyQService interface {
 	DeviceState(serialNumber string) (string, error)
 }
 type DeviceManager struct {
-	options DeviceManagerOptions
+	options    DeviceManagerOptions
 	myqService MyQService
 }
 
 type DeviceManagerOptions struct {
-	MaxRetries int
+	MaxRetries    int
 	RetryInterval int
 }
 
 type DeviceDesiredState struct {
 	SerialNumber string
 	DesiredState string
-	Action string
+	Action       string
 }
 
 func NewDeviceManager(options DeviceManagerOptions, service MyQService) *DeviceManager {
@@ -34,7 +34,7 @@ func NewDeviceManager(options DeviceManagerOptions, service MyQService) *DeviceM
 		options.RetryInterval = 30
 	}
 	return &DeviceManager{
-		options: options,
+		options:    options,
 		myqService: service,
 	}
 }
@@ -43,7 +43,7 @@ func (dm DeviceManager) SetDesiredState(desiredState DeviceDesiredState) error {
 	retries := dm.options.MaxRetries
 	retry := 0
 	state, err := dm.myqService.DeviceState(desiredState.SerialNumber)
-	
+
 	for !strings.Contains(state, desiredState.DesiredState) && retry < retries {
 		retry++
 		err = dm.myqService.SetDoorState(desiredState.SerialNumber, desiredState.Action)
@@ -66,6 +66,3 @@ func (dm DeviceManager) SetDesiredState(desiredState DeviceDesiredState) error {
 	return nil
 
 }
-
-
-
