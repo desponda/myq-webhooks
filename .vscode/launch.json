@@ -3,17 +3,17 @@
         {
             "type": "aws-sam",
             "request": "direct-invoke",
-            "name": "myq-webhooks:HelloWorldFunction (go1.x)",
+            "name": "myq-webhooks:MyQManagerFunction (go1.x)",
             "invokeTarget": {
                 "target": "template",
                 "templatePath": "${workspaceFolder}/template.yaml",
-                "logicalId": "HelloWorldFunction"
+                "logicalId": "MyQManagerFunction"
             },
             "lambda": {
                 "payload":  {
 
                     "json": {
-                        "name": "HelloWorldFunction"
+                        "name": "MyQManagerFunction"
                     }
                 },
                 "environmentVariables": {},
@@ -23,11 +23,11 @@
         {
             "type": "aws-sam",
             "request": "direct-invoke",
-            "name": "API myq-webhooks:HelloWorldFunction (go1.x)",
+            "name": "API myq-webhooks:MyQManagerFunction (go1.x)",
             "invokeTarget": {
                 "target": "api",
                 "templatePath": "${workspaceFolder}/template.yaml",
-                "logicalId": "HelloWorldFunction"
+                "logicalId": "MyQManagerFunction"
             },
             "api": {
                 "path": "/",

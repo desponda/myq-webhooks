@@ -1,51 +1,47 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"net/http"
 	"os"
-	"strings"
-	"time"
+        "encoding/json"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/desponda/myq-golang"
+	"github.com/desponda/myq-webhooks/pkg/services"
 )
 
-type MyEvent struct {
-        Name string `json:"name"`
+type MyQDesiredStateRequest struct {
+        SerialNumber string `json:"serial_number"`
+        DesiredState string `json:"desired_state"`
 }
 
-func HandleRequest(ctx context.Context, name MyEvent) (string, error) {
+func MyQHandler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
         username := os.Getenv("MYQ_USERNAME")
         password := os.Getenv("MYQ_PASSWORD")
         session := myq.Session{Username: username, Password: password}
-        if err := session.Login(); err != nil {
-                fmt.Printf("Error logging in to myq: %s\n", err)
-                return "", err
+        service := services.NewDeviceManager(services.DeviceManagerOptions{MaxRetries: 3, RetryInterval: 30}, &session)
+        var desiredState MyQDesiredStateRequest
+
+        err := json.Unmarshal([]byte(req.Body), &desiredState)
+        if err != nil {
+                return events.APIGatewayProxyResponse{StatusCode: 400}, err
         }
-        retries := 10
-        retry := 0
-        state, err := session.DeviceState("SERIAL_NUMBER")
-        for  !strings.Contains(state,"closed") && retry < retries {
-                retry++
-                session.SetDoorState("SERIAL_NUMBER", "close")
-                time.Sleep(30 * time.Second)
-                state, err = session.DeviceState("SERIAL_NUMBER")
-                fmt.Printf("State: %s, Error: %s\n", state, err)
-        }
+
+        err = service.SetDesiredState(services.DeviceDesiredState{SerialNumber: desiredState.SerialNumber, DesiredState: desiredState.DesiredState})
 
         if err!= nil {
                 fmt.Printf("Error: %s\n", err)
+                return events.APIGatewayProxyResponse{StatusCode: 500}, err
         }
-
-        if !strings.Contains( state, "closed") { 
-                return "", fmt.Errorf("device not closed")
-        }
-
   
 
-        return "completed", nil
+        return events.APIGatewayProxyResponse{
+                StatusCode: http.StatusOK,
+            }, nil
 }
+
 func main() {
-        lambda.Start(HandleRequest)
+        lambda.Start(MyQHandler)
 }
