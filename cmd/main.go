@@ -15,6 +15,7 @@ import (
 type MyQDesiredStateRequest struct {
         SerialNumber string `json:"serial_number"`
         DesiredState string `json:"desired_state"`
+        Action      string `json:"action"`
 }
 
 func MyQHandler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -29,14 +30,13 @@ func MyQHandler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyRespon
                 return events.APIGatewayProxyResponse{StatusCode: 400}, err
         }
 
-        err = service.SetDesiredState(services.DeviceDesiredState{SerialNumber: desiredState.SerialNumber, DesiredState: desiredState.DesiredState})
+        err = service.SetDesiredState(services.DeviceDesiredState{SerialNumber: desiredState.SerialNumber, DesiredState: desiredState.DesiredState, Action: desiredState.Action})
 
         if err!= nil {
                 fmt.Printf("Error: %s\n", err)
                 return events.APIGatewayProxyResponse{StatusCode: 500}, err
         }
   
-
         return events.APIGatewayProxyResponse{
                 StatusCode: http.StatusOK,
             }, nil

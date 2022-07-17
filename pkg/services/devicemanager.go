@@ -23,6 +23,7 @@ type DeviceManagerOptions struct {
 type DeviceDesiredState struct {
 	SerialNumber string
 	DesiredState string
+	Action string
 }
 
 func NewDeviceManager(options DeviceManagerOptions, service MyQService) *DeviceManager {
@@ -45,7 +46,7 @@ func (dm DeviceManager) SetDesiredState(desiredState DeviceDesiredState) error {
 	
 	for !strings.Contains(state, desiredState.DesiredState) && retry < retries {
 		retry++
-		err = dm.myqService.SetDoorState(desiredState.SerialNumber, desiredState.DesiredState)
+		err = dm.myqService.SetDoorState(desiredState.SerialNumber, desiredState.Action)
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
 		}
